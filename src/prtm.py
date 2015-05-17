@@ -31,7 +31,7 @@ Y   163.06333
 
 import sys
 
-def prtn(input_filepath):
+def prtm(input_filepath):
 
     def aa_weight(aa_id):
         aa_weights = {"A": 71.03711,
@@ -56,7 +56,7 @@ def prtn(input_filepath):
                       "Y": 163.06333}
         assert aa_id in aa_weights.keys(),\
             "Error: unknown amino acid %s" % aa_id
-        return aa_weights(aa_id)    
+        return aa_weights[aa_id]    
 
     def get_protein_seq(input_filepath):
 
@@ -74,12 +74,12 @@ def prtn(input_filepath):
     def write_results(results, input_filepath):
 
         output_file = open(input_filepath+".results", "w")
-        output_file.write(results)
+        output_file.write(str(results))
         output_file.close()
 
     protein_seq = get_protein_seq(input_filepath)
     protein_weight = calc_protein_weight(protein_seq)
     write_results(protein_weight, input_filepath)
 
-    if __name__ == "__main__":
-        prtn(sys.argv[1])
+if __name__ == "__main__":
+        prtm(sys.argv[1])
