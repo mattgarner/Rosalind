@@ -27,6 +27,6 @@ def lia(input_filepath):
     print "AaBb odds: %d" % float(AaBb_odds)
     total_AaBb = 2 * 0.25 * total_offspring
     print "Total double hets: %s" % int(total_AaBb)
-    
+
 if __name__ == "__main__":
     lia(sys.argv[1])
