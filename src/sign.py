@@ -8,22 +8,28 @@ Given: A positive integer n <=6.
 Return: The total number of signed permutations of length n, followed by a list of all such permutations (you may list the signed permutations in any order).
 '''
 
-# We will recycle the code from perm, by add an additional step to add all sign permutations to each numerical permutation
+# We will recycle some code from perm, by add an additional step to add all sign permutations to each numerical permutation
 
 import sys
 import os
+import itertools
 from math import factorial
 
-def read_input(input_filepath):
 
+def read_input(input_filepath):
+    '''
+    Gets data from the input file
+    '''
     input_file = open(input_filepath, "r")
     input_int = int(input_file.readline().strip())
     int_range = range(1, input_int+1)
     return int_range
 
 def next_perm(current_perm):
-    # Finds the next permutation using lexicographical ordering algorithm
-
+    '''
+    Takes a permutations and finds the next permutation using lexicographical ordering algorithm
+    '''
+    
     # Find the largest index k
     k = -1
     for idx in reversed(range(0,len(current_perm)-1)):
@@ -53,6 +59,9 @@ def next_perm(current_perm):
     return current_perm
 
 def num_perm(int_range):
+    '''
+    Generates all unsigned numerical permutations using next_perm
+    '''
     input_int = int_range[-1]
     current_perm = int_range
 
@@ -71,16 +80,52 @@ def num_perm(int_range):
 
     return permutations
 
+
 def sign_perm(unsigned_perms):
-    # Write a function to generate sign permutations
-    # of a set of numerical permutations
-    pass
+    '''
+    Generates all signed permutations for each unsigned permutation in unsigned_perms
+    '''
+
+    perm_len = len(unsigned_perms[0])
+    sign_template = list(
+        itertools.product([-1, 1], repeat=perm_len))
+    assert len(sign_template) == 2**perm_len, "Error: unexpected sign template len"
+    signed_perms = []
+    for perm in unsigned_perms:
+        for signs in sign_template:
+            signed_perm = [a*b for a,b in zip(perm, signs)]
+            signed_perms.append(signed_perm)
+    return signed_perms
 
 
-def main(input_filepath):
+def write_result(input_filepath, signed_perms):
+    '''
+    Write signed perms count and each perm to output
+    '''
+    with open(input_filepath + ".result", "w") as output_file:
+        output_file.write(str(len(signed_perms)) + "\n")
+        for perm in signed_perms:
+                output_file.write(" ".join((str(x)) for x in perm) + "\n")
+
+
+
+
+def main(input_filepath): 
     int_range = read_input(input_filepath)
+    exp_unsigned_perms = factorial(len(int_range))
+    print "Expected unsigned perms: ", exp_unsigned_perms
     unsigned_perms = num_perm(int_range)
+    print "Observed unsigned perms: ", len(unsigned_perms)
+    assert exp_unsigned_perms == len(unsigned_perms), "Error: unexpected number of unsigned permutations"
 
+    exp_signed_perms = exp_unsigned_perms * (2**len(int_range))
+    print "\nExpected signed perms: ", exp_signed_perms
+    signed_perms = sign_perm(unsigned_perms)
+    print "Observed unsigned perms: ", len(signed_perms)
+    assert exp_signed_perms == len(signed_perms), "Error: unexpected number of signed permutations"
+
+    write_result(input_filepath, signed_perms)
+    print "Complete!"
 
 if __name__ == "__main__":
     main(sys.argv[1])

@@ -56,6 +56,7 @@ def perm(input_filepath):
 
 
     # First row of results contains 1..n
+
     result_str = ""
     for value in int_range:
             result_str += str(value) + " "
