@@ -29,12 +29,10 @@ def lgis(input_filepath):
     def longest_incr(permutation):
         for pos, num in permutation:
             # need to stop if current > remaining possible
-             
+
             print
-        
-        
-        
-        
+
+
 
     n, permutation = get_input(input_filepath)
     longest_inc_subseq = longest_incr(permutation)
