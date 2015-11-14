@@ -19,9 +19,14 @@ Return: A list of all corrections in the form "[old read]->[new read]".
 and you may return the corrections in any order.)
 
 '''
-import os
-import sys
-from fibd import input_filepath
+
+from sys import argv, exit
+
+def get_data(input_filepath):
+    with open(input_filepath, "r") as fasta_file:
+        fasta_reads = fasta_seqs_to_list(fasta_file)
+        return fasta_reads
+
 
 def fasta_seqs_to_list(fasta_file):
     fasta_index = -1
@@ -32,11 +37,8 @@ def fasta_seqs_to_list(fasta_file):
             fasta_reads.append("")
         else:
             fasta_reads[fasta_index] += line.strip()
-
-    print "reads:"
-    for read in fasta_reads:
-        print read
     return fasta_reads
+
 
 def rev_comp(sequence):
     nucleotide_pair = {"A":"T","T":"A","C":"G","G":"C"}
@@ -45,39 +47,75 @@ def rev_comp(sequence):
         complement += nucleotide_pair[nucleotide]
     return complement[::-1]
 
-def mismatched_reads(fasta_reads):
-    mismatches = []
-    # To be cleaned up later, avoids strange behaviour in mismatched reads if
-    # fasta_reads is used. Elements of list are modified in a way I don't yet
-    # understand
+
+def categorise_reads(fasta_reads):
+    '''
+    Categorise reads into matched or mismatched within the self set
+    '''
     reads = fasta_reads[:]
+    matched_reads = []
+    mismatched_reads = []
+
     while reads:
         read = reads.pop()
-        print "read:", read
-        print "reads\n", reads
         # Test for presence of dupe/rev comp of read in remaining reads
         # If found, remove all instances of it from the set of reads
         # Else if not found, record as a mismatch
         if (read in reads) or (rev_comp(read) in reads):
-            print "Match found for %s" % read
-            print reads, "\n"
             exclusion_list = [read, rev_comp(read)]
             reads = [i for i in reads if i not in exclusion_list]
-            print reads, "\n"
+            matched_reads.append(read)
         else:
-            print "Not found %s\n" % read
-            print reads
-            mismatches.append(read)
-        raw_input()
-    return mismatches
+            mismatched_reads.append(read)
+    return matched_reads, mismatched_reads
+
+
+def hamming(query, template):
+    '''
+    Get the Hamming dist between two seqs
+    '''
+    hamm_dist = sum([q != t for (q, t) in zip(query, template)])
+    return hamm_dist
+
+
+def get_corrections(all_correct_reads, error_reads):
+    corrections = {}
+    for error_read in error_reads:
+        new_read = find_match(error_read, all_correct_reads, 1)
+        if new_read:
+            corrections[error_read] = new_read
+        else:
+            print "Error: Match not found for ", error_read, "in \n", all_correct_reads
+            exit()
+    return corrections
+
+
+def find_match(sequence, correct_reads, distance):
+    '''
+    Find a read within correct reads with the specified Hamming distance from the sequence
+    '''
+    for read in correct_reads:
+        if hamming(sequence, read) == distance:
+            return read
+
+
+def write_results(results, filepath):
+    with open(filepath + ".results", "w") as output_file:
+        newline = ""
+        for item in results.items():
+            line = newline + item[0] + "->" + item[1]
+            output_file.write(line)
+            print line
+            newline = "\n"
+
 
 def corr(input_filepath):
-    with open(input_filepath, "r") as fasta_file:
-        fasta_reads = fasta_seqs_to_list(fasta_file)
-    errors = mismatched_reads(fasta_reads)
-    print "Reads", fasta_reads
-    print "Errors", errors
-    # Search fasta_reads for matches with Hamming distance of 1
+    fasta_reads = get_data(input_filepath)
+    correct_reads, error_reads = categorise_reads(fasta_reads)
+    all_correct_reads = [rev_comp(read) for read in correct_reads] + correct_reads
+    corrections = get_corrections(all_correct_reads, error_reads)
+    write_results(corrections, input_filepath)
+
 
 if __name__ == "__main__":
-    corr(sys.argv[1])
+    corr(argv[1])
